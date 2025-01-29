@@ -77,11 +77,16 @@ const TodoCard = ({ todoo, update, remove }: { todoo: Todo, update: (id: string,
     update(todo.id!, updatedTodo);
     setTodo(updatedTodo)
   }
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    remove(todo.id!);
+  }
+  
   return (
     <div className="flex gap-4 px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100" onMouseDown={onClick}>
       {todo.completed ? <CircleCheck fill="#54a0ff" color="#fff" /> : <Circle className="text-gray-400 size-5 mt-0.5" />}
       <p className="text-black/80 w-full">{todo.title}</p>
-      <Trash2 className="text-gray-400 size-5 mt-0.5 hover:text-red-500" onMouseDown={() => remove(todo.id!)} />
+      <Trash2 className="text-gray-400 size-5 mt-0.5 hover:text-red-500" onMouseDown={handleDelete} />
     </div>
   );
 };
