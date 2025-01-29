@@ -1,45 +1,36 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { todosTableType } from "@/db/schema";
+import { useTodos, useUpdateTodo, useDeleteTodo, useCreateTodo } from "@/lib/hooks/use-todos";
 import { cn } from "@/lib/utils";
-import { Circle, Trash2, Check, CircleCheck } from "lucide-react";
+import { Circle, CircleCheck, Trash2 } from "lucide-react";
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { createTodo, getTodos, updateTodo, deleteTodo } from "@/lib/indexdb";
 
-export type Todo = {
-  id: string;
-  title: string;
-  completed: boolean;
-};
+export type Todo = todosTableType;
 
 const Page = () => {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [completedTodos, setCompletedTodos] = useState<number>(todos.filter((todo) => todo.completed).length);
+  const {data: todos} = useTodos();
+  const createTodo = useCreateTodo();
+  const updateTodo = useUpdateTodo();
+  const deleteTodo = useDeleteTodo();
+  const [completedTodos, setCompletedTodos] = useState<number>(0);
 
-  const addTodo = async (todo: Todo) => {
-    createTodo(todo);
-    updateTodosList();
-    setCompletedTodos(todos.filter((todo) => todo.completed).length);
-  };
-
-  const editTodo = async (todo: Todo) => {
-    updateTodo(todo);
-    updateTodosList();
-    setCompletedTodos(todos.filter((todo) => todo.completed).length);
+  const addTodo = (todo: Todo) => {
+    createTodo.mutate(todo);
   }
 
-  const removeTodo = async (id: string) => {
-    deleteTodo(id);
-    // updateTodosList();
+  const editTodo = (id: string, todo: Todo) => {
+    updateTodo.mutate({ id, todo });
   }
-
-  const updateTodosList = async () => {
-    const todos = await getTodos() as Todo[];
-    setTodos(todos);
+  const removeTodo = (id: string) => {
+    deleteTodo.mutate(id);
   }
 
   useEffect(() => {
-    updateTodosList();
-  },[])
+    if (todos && todos.length > 0) {
+      setCompletedTodos(todos.filter((todo) => todo.completed).length)
+    }
+  }, [todos])
 
   return (
     <div>
@@ -55,11 +46,11 @@ const Page = () => {
         <div className="py-10">
           <PageWrapper className="flex flex-col gap-5">
             <div className="flex justify-between items-center">
-              <TitleAndCount title="All todos" count={todos.length} />
-              <TitleAndCount title="Completed tasks" count={`${completedTodos} out of ${todos.length}`} />
+              <TitleAndCount title="All todos" count={todos?.length ?? 0} />
+              <TitleAndCount title="Completed tasks" count={`${completedTodos} out of ${todos?.length ?? 0}`} />
             </div>
 
-            <TodoList todos={todos} updateTodo={editTodo} removeTodo={removeTodo} />
+            {!!todos && <TodoList todos={todos} updateTodo={editTodo} removeTodo={removeTodo} />}
           </PageWrapper>
         </div>
       </main>
@@ -68,7 +59,7 @@ const Page = () => {
 };
 export default Page;
 
-const TodoList = ({ todos, updateTodo, removeTodo }: { todos: Todo[], updateTodo: (todo: Todo) => void, removeTodo: (id: string) => void }) => {
+const TodoList = ({ todos, updateTodo, removeTodo }: { todos: Todo[], updateTodo: (id: string, todo: Todo) => void, removeTodo: (id: string) => void }) => {
   return (
     <div className="flex flex-col gap-5">
       {todos.map((todo) => (
@@ -78,19 +69,19 @@ const TodoList = ({ todos, updateTodo, removeTodo }: { todos: Todo[], updateTodo
   );
 };
 
-const TodoCard = ({ todoo, update, remove }: { todoo: Todo, update: (todo: Todo) => void, remove: (id: string) => void }) => {
+const TodoCard = ({ todoo, update, remove }: { todoo: Todo, update: (id: string, todo: Todo) => void, remove: (id: string) => void }) => {
   const [todo, setTodo] = useState<Todo>(todoo);
 
   const onClick = () => {
     const updatedTodo = {...todo, completed: !todo.completed};
-    update(updatedTodo);
+    update(todo.id!, updatedTodo);
     setTodo(updatedTodo)
   }
   return (
     <div className="flex gap-4 px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100" onMouseDown={onClick}>
       {todo.completed ? <CircleCheck fill="#54a0ff" color="#fff" /> : <Circle className="text-gray-400 size-5 mt-0.5" />}
       <p className="text-black/80 w-full">{todo.title}</p>
-      <Trash2 className="text-gray-400 size-5 mt-0.5 hover:text-red-500" onMouseDown={() => remove(todo.id)} />
+      <Trash2 className="text-gray-400 size-5 mt-0.5 hover:text-red-500" onMouseDown={() => remove(todo.id!)} />
     </div>
   );
 };

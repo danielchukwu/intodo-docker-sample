@@ -10,4 +10,5 @@ COPY . .
 
 EXPOSE 3000
 
+# Use the npm script directly which already has the --hot flag
 CMD [ "bun", "dev" ]
