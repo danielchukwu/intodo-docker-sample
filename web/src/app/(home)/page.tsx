@@ -81,7 +81,7 @@ const TodoCard = ({ todoo, update, remove }: { todoo: Todo, update: (id: string,
     e.stopPropagation();
     remove(todo.id!);
   }
-  
+
   return (
     <div className="flex gap-4 px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100" onMouseDown={onClick}>
       {todo.completed ? <CircleCheck fill="#54a0ff" color="#fff" /> : <Circle className="text-gray-400 size-5 mt-0.5" />}
@@ -108,6 +108,7 @@ const PageWrapper = ({
 const TodoForm = ({ createTodo }: { createTodo: (todo: Todo) => void}) => {
   const [title, setTitle] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+
   const create = () => {
     if (title.trim() === "") return;
 
@@ -115,6 +116,13 @@ const TodoForm = ({ createTodo }: { createTodo: (todo: Todo) => void}) => {
     inputRef.current!.value = "";
     setTitle("");
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      create();
+    }
+  } 
 
   return (
     <div className="flex flex-col justify-center gap-8">
@@ -128,8 +136,9 @@ const TodoForm = ({ createTodo }: { createTodo: (todo: Todo) => void}) => {
           onChange={(e) => {
             setTitle(e.target.value);
           }}
+          onKeyDown={handleKeyDown}
         />
-        <Button className="rounded-lg h-[3.125rem] bg-[#54a0ff] hover:bg-[#4b90e4]" onMouseDown={() => create()}>
+        <Button className="rounded-lg h-[3.125rem] bg-[#54a0ff] hover:bg-[#4b90e4]" onMouseDown={create}>
           Add todo
         </Button>
       </div>
